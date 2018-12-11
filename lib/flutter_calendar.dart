@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:tuple/tuple.dart';
 import 'package:flutter_calendar/calendar_tile.dart';
 import 'package:date_utils/date_utils.dart';
+import 'package:intl/intl.dart';
 
 typedef DayBuilder(BuildContext context, DateTime day);
 
@@ -16,16 +17,21 @@ class Calendar extends StatefulWidget {
   final bool showTodayAction;
   final bool showCalendarPickerIcon;
   final DateTime initialCalendarDateOverride;
+  final String locale;
+  final String monthFormat;
 
-  Calendar(
-      {this.onDateSelected,
-      this.onSelectedRangeChange,
-      this.isExpandable: false,
-      this.dayBuilder,
-      this.showTodayAction: true,
-      this.showChevronsToChangeRange: true,
-      this.showCalendarPickerIcon: true,
-      this.initialCalendarDateOverride});
+  Calendar({
+    this.onDateSelected,
+    this.onSelectedRangeChange,
+    this.isExpandable: false,
+    this.dayBuilder,
+    this.showTodayAction: true,
+    this.showChevronsToChangeRange: true,
+    this.showCalendarPickerIcon: true,
+    this.initialCalendarDateOverride,
+    this.locale = 'en',
+    this.monthFormat = 'MMMM yyyy',
+  });
 
   @override
   _CalendarState createState() => new _CalendarState();
@@ -43,6 +49,8 @@ class _CalendarState extends State<Calendar> {
 
   void initState() {
     super.initState();
+    Utils.setLocale(widget.locale);
+
     if (widget.initialCalendarDateOverride != null)
       _selectedDate = widget.initialCalendarDateOverride;
     selectedMonthsDays = Utils.daysInMonth(_selectedDate);
@@ -52,7 +60,7 @@ class _CalendarState extends State<Calendar> {
         Utils.daysInRange(firstDayOfCurrentWeek, lastDayOfCurrentWeek)
             .toList()
             .sublist(0, 7);
-    displayMonth = Utils.formatMonth(_selectedDate);
+    _setDisplayMonth();
   }
 
   Widget get nameAndIconRow {
@@ -86,7 +94,7 @@ class _CalendarState extends State<Calendar> {
 
     if (widget.showTodayAction) {
       leftInnerIcon = new InkWell(
-        child: new Text('Today'),
+        child: new Text(_getTodayText(widget.locale)),
         onTap: resetToToday,
       );
     } else {
@@ -240,7 +248,7 @@ class _CalendarState extends State<Calendar> {
       selectedWeeksDays =
           Utils.daysInRange(firstDayOfCurrentWeek, lastDayOfCurrentWeek)
               .toList();
-      displayMonth = Utils.formatMonth(_selectedDate);
+      _setDisplayMonth();
     });
 
     _launchDateSelectionCallback(_selectedDate);
@@ -253,7 +261,7 @@ class _CalendarState extends State<Calendar> {
       var lastDateOfNewMonth = Utils.lastDayOfMonth(_selectedDate);
       updateSelectedRange(firstDateOfNewMonth, lastDateOfNewMonth);
       selectedMonthsDays = Utils.daysInMonth(_selectedDate);
-      displayMonth = Utils.formatMonth(_selectedDate);
+      _setDisplayMonth();
     });
   }
 
@@ -264,7 +272,7 @@ class _CalendarState extends State<Calendar> {
       var lastDateOfNewMonth = Utils.lastDayOfMonth(_selectedDate);
       updateSelectedRange(firstDateOfNewMonth, lastDateOfNewMonth);
       selectedMonthsDays = Utils.daysInMonth(_selectedDate);
-      displayMonth = Utils.formatMonth(_selectedDate);
+      _setDisplayMonth();
     });
   }
 
@@ -278,7 +286,7 @@ class _CalendarState extends State<Calendar> {
           Utils.daysInRange(firstDayOfCurrentWeek, lastDayOfCurrentWeek)
               .toList()
               .sublist(0, 7);
-      displayMonth = Utils.formatMonth(_selectedDate);
+      _setDisplayMonth();
     });
     _launchDateSelectionCallback(_selectedDate);
   }
@@ -293,7 +301,7 @@ class _CalendarState extends State<Calendar> {
           Utils.daysInRange(firstDayOfCurrentWeek, lastDayOfCurrentWeek)
               .toList()
               .sublist(0, 7);
-      displayMonth = Utils.formatMonth(_selectedDate);
+      _setDisplayMonth();
     });
     _launchDateSelectionCallback(_selectedDate);
   }
@@ -323,7 +331,7 @@ class _CalendarState extends State<Calendar> {
             Utils.daysInRange(firstDayOfCurrentWeek, lastDayOfCurrentWeek)
                 .toList();
         selectedMonthsDays = Utils.daysInMonth(selected);
-        displayMonth = Utils.formatMonth(selected);
+        _setDisplayMonth();
       });
       // updating selected date range based on selected week
       updateSelectedRange(firstDayOfCurrentWeek, lastDayOfCurrentWeek);
@@ -385,6 +393,20 @@ class _CalendarState extends State<Calendar> {
     if (widget.onDateSelected != null) {
       widget.onDateSelected(day);
     }
+  }
+
+  String _getTodayText(String locale) {
+    return {
+          'en': 'Today',
+          'ko': '오늘',
+        }[locale] ??
+        'Today';
+  }
+
+  void _setDisplayMonth() {
+    displayMonth = widget.monthFormat.isEmpty
+        ? Utils.formatMonth(_selectedDate)
+        : DateFormat(widget.monthFormat).format(_selectedDate);
   }
 }
 
