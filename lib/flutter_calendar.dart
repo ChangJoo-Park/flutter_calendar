@@ -319,6 +319,7 @@ class _CalendarState extends State<Calendar> {
       initialDate: _selectedDate ?? new DateTime.now(),
       firstDate: new DateTime(1960),
       lastDate: new DateTime(2050),
+      locale: Locale(widget.locale),
     );
 
     if (selected != null) {
